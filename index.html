@@ -4,139 +4,165 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>エリア比較ダッシュボード</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@300;400;500;600;700&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
 <style>
 *{margin:0;padding:0;box-sizing:border-box;}
 :root{
-  --bg:#0b0f19;--surface:#131825;--card:#1a2035;--border:rgba(255,255,255,.08);
-  --accent:#6366f1;--accent2:#06b6d4;--accent3:#f59e0b;--text:#e2e8f0;--muted:#64748b;
-  --glass:rgba(30,41,59,.65);--glow:0 0 30px rgba(99,102,241,.15);
+  --bg:#f0f4f8;--surface:#ffffff;--card:#ffffff;--border:#e2e8f0;
+  --accent:#1a73e8;--accent-light:#e8f0fe;--accent2:#00b8a9;--accent2-light:#e0f7f5;
+  --accent3:#ff6d00;--accent3-light:#fff3e0;
+  --text:#1a202c;--text2:#4a5568;--muted:#718096;
+  --shadow:0 1px 3px rgba(0,0,0,.06), 0 1px 2px rgba(0,0,0,.04);
+  --shadow-md:0 4px 14px rgba(0,0,0,.06), 0 2px 6px rgba(0,0,0,.04);
+  --shadow-lg:0 10px 30px rgba(0,0,0,.08), 0 4px 10px rgba(0,0,0,.04);
+  --radius:12px;
 }
-body{background:var(--bg);color:var(--text);font-family:'Segoe UI','Hiragino Kaku Gothic ProN',sans-serif;overflow-x:hidden;}
-.page{display:none;min-height:100vh;animation:fadeIn .5s ease;}
+body{background:var(--bg);color:var(--text);
+  font-family:'Noto Sans JP','Segoe UI','Hiragino Kaku Gothic ProN',sans-serif;
+  font-weight:400;line-height:1.6;overflow-x:hidden;}
+.page{display:none;min-height:100vh;animation:fadeIn .45s ease;}
 .page.active{display:block;}
-@keyframes fadeIn{from{opacity:0;transform:translateY(10px);}to{opacity:1;transform:translateY(0);}}
+@keyframes fadeIn{from{opacity:0;transform:translateY(8px);}to{opacity:1;transform:translateY(0);}}
 
-/* Header */
-.header{background:linear-gradient(135deg,#1e1b4b 0%,#0f172a 50%,#042f2e 100%);
-  padding:24px 40px;border-bottom:1px solid var(--border);position:sticky;top:0;z-index:100;
-  backdrop-filter:blur(20px);}
-.header h1{font-size:1.5rem;font-weight:700;
-  background:linear-gradient(90deg,#818cf8,#38bdf8,#34d399);-webkit-background-clip:text;
-  -webkit-text-fill-color:transparent;display:inline-block;}
-.header .subtitle{color:var(--muted);font-size:.85rem;margin-top:4px;}
-.header .step-badge{display:inline-block;background:var(--accent);color:#fff;
-  font-size:.7rem;padding:3px 10px;border-radius:20px;margin-right:10px;vertical-align:middle;}
+/* ===== HEADER ===== */
+.header{
+  background:linear-gradient(135deg,#1a73e8 0%,#4f8cff 50%,#00b8a9 100%);
+  padding:20px 40px;position:sticky;top:0;z-index:100;
+  box-shadow:0 2px 12px rgba(26,115,232,.18);
+}
+.header h1{font-size:1.4rem;font-weight:700;color:#fff;display:inline-block;}
+.header .subtitle{color:rgba(255,255,255,.85);font-size:.82rem;margin-top:2px;font-weight:300;}
+.header .step-badge{display:inline-block;background:rgba(255,255,255,.22);color:#fff;
+  font-size:.7rem;padding:3px 12px;border-radius:20px;margin-right:10px;vertical-align:middle;
+  font-weight:600;backdrop-filter:blur(4px);border:1px solid rgba(255,255,255,.25);}
 
-/* Controls */
-.controls{padding:20px 40px;display:flex;gap:16px;align-items:center;flex-wrap:wrap;}
+/* ===== CONTROLS ===== */
+.controls{padding:20px 40px;display:flex;gap:14px;align-items:center;flex-wrap:wrap;
+  background:var(--surface);border-bottom:1px solid var(--border);}
 .select-wrap{position:relative;}
-.select-wrap select{background:var(--card);color:var(--text);border:1px solid var(--border);
-  padding:10px 16px;border-radius:10px;font-size:.9rem;min-width:280px;cursor:pointer;
-  appearance:none;-webkit-appearance:none;}
+.select-wrap select{background:var(--bg);color:var(--text);border:1px solid var(--border);
+  padding:10px 36px 10px 14px;border-radius:8px;font-size:.88rem;min-width:300px;cursor:pointer;
+  appearance:none;-webkit-appearance:none;font-family:inherit;transition:border-color .2s;}
+.select-wrap select:focus{outline:none;border-color:var(--accent);box-shadow:0 0 0 3px var(--accent-light);}
 .select-wrap::after{content:'▾';position:absolute;right:14px;top:50%;transform:translateY(-50%);
-  color:var(--muted);pointer-events:none;}
+  color:var(--muted);pointer-events:none;font-size:.8rem;}
 
-/* Buttons */
-.btn{padding:10px 24px;border:none;border-radius:10px;font-size:.9rem;font-weight:600;
-  cursor:pointer;transition:all .2s;display:inline-flex;align-items:center;gap:8px;}
-.btn-primary{background:linear-gradient(135deg,var(--accent),#818cf8);color:#fff;}
-.btn-primary:hover{transform:translateY(-1px);box-shadow:0 8px 25px rgba(99,102,241,.3);}
-.btn-secondary{background:var(--card);color:var(--text);border:1px solid var(--border);}
-.btn-secondary:hover{border-color:var(--accent);}
-.btn:disabled{opacity:.4;cursor:not-allowed;transform:none!important;}
+/* ===== BUTTONS ===== */
+.btn{padding:10px 22px;border:none;border-radius:8px;font-size:.88rem;font-weight:600;
+  cursor:pointer;transition:all .2s;display:inline-flex;align-items:center;gap:8px;font-family:inherit;}
+.btn-primary{background:var(--accent);color:#fff;}
+.btn-primary:hover{background:#1557b0;box-shadow:0 4px 14px rgba(26,115,232,.28);transform:translateY(-1px);}
+.btn-secondary{background:var(--surface);color:var(--text);border:1px solid var(--border);}
+.btn-secondary:hover{border-color:var(--accent);color:var(--accent);background:var(--accent-light);}
+.btn:disabled{opacity:.4;cursor:not-allowed;transform:none!important;box-shadow:none!important;}
 
-/* Table */
+/* ===== TABLE ===== */
 .table-container{padding:0 40px 30px;overflow-x:auto;}
 table{width:100%;border-collapse:separate;border-spacing:0;background:var(--card);
-  border-radius:14px;overflow:hidden;border:1px solid var(--border);}
-thead th{background:rgba(99,102,241,.12);padding:14px 16px;text-align:left;font-size:.8rem;
-  text-transform:uppercase;letter-spacing:.5px;color:var(--muted);cursor:pointer;
-  user-select:none;white-space:nowrap;position:relative;}
-thead th:hover{color:var(--text);}
-thead th .sort-arrow{margin-left:4px;font-size:.65rem;}
-tbody tr{transition:background .15s;border-bottom:1px solid var(--border);}
-tbody tr:hover{background:rgba(99,102,241,.06);}
-tbody td{padding:12px 16px;font-size:.85rem;border-bottom:1px solid var(--border);}
+  border-radius:var(--radius);overflow:hidden;border:1px solid var(--border);box-shadow:var(--shadow);}
+thead th{background:var(--accent-light);padding:13px 16px;text-align:left;font-size:.75rem;
+  text-transform:uppercase;letter-spacing:.6px;color:var(--accent);cursor:pointer;
+  user-select:none;white-space:nowrap;font-weight:600;border-bottom:2px solid #d0dff5;}
+thead th:hover{background:#dce8fc;color:#1557b0;}
+thead th .sort-arrow{margin-left:4px;font-size:.6rem;}
+tbody tr{transition:background .15s;}
+tbody tr:hover{background:#f7faff;}
+tbody td{padding:12px 16px;font-size:.84rem;border-bottom:1px solid var(--border);color:var(--text2);}
+tbody td strong{color:var(--text);font-weight:600;}
 .check-col{width:40px;text-align:center;}
 input[type="checkbox"]{width:16px;height:16px;accent-color:var(--accent);cursor:pointer;}
 
-/* Bar in cell */
+/* ===== BAR IN CELL ===== */
 .bar-cell{position:relative;min-width:120px;}
-.bar-bg{height:6px;background:rgba(255,255,255,.06);border-radius:3px;overflow:hidden;}
+.bar-bg{height:6px;background:#e2e8f0;border-radius:3px;overflow:hidden;}
 .bar-fill{height:100%;border-radius:3px;transition:width .6s ease;}
-.bar-val{font-size:.75rem;color:var(--muted);margin-top:3px;}
+.bar-val{font-size:.73rem;color:var(--muted);margin-top:3px;font-weight:500;}
 
-/* Tags */
-.tag{display:inline-block;padding:2px 10px;border-radius:20px;font-size:.72rem;font-weight:600;}
-.tag-region{background:rgba(99,102,241,.15);color:#a5b4fc;}
-.tag-type{background:rgba(6,182,212,.15);color:#67e8f9;}
+/* ===== TAGS ===== */
+.tag{display:inline-block;padding:2px 10px;border-radius:20px;font-size:.71rem;font-weight:600;}
+.tag-region{background:var(--accent-light);color:var(--accent);}
+.tag-type{background:var(--accent2-light);color:#00897b;}
 
-/* Page 2 Layout */
-.dash-grid{display:grid;grid-template-columns:340px 1fr;grid-template-rows:auto 1fr;
-  gap:0;min-height:calc(100vh - 80px);}
+/* ===== PAGE 2 GRID ===== */
+.dash-grid{display:grid;grid-template-columns:320px 1fr;grid-template-rows:auto 1fr;
+  gap:0;min-height:calc(100vh - 76px);}
 .sidebar{background:var(--surface);border-right:1px solid var(--border);padding:20px;
   overflow-y:auto;grid-row:1/3;}
-.map-area{height:400px;position:relative;}
-.charts-area{padding:20px;display:grid;grid-template-columns:1fr 1fr;gap:16px;
-  align-content:start;}
+.map-area{height:420px;position:relative;border-bottom:1px solid var(--border);}
+.charts-area{padding:24px;display:grid;grid-template-columns:1fr 1fr;gap:20px;
+  align-content:start;background:var(--bg);}
 
-/* Cards */
-.card{background:var(--card);border:1px solid var(--border);border-radius:14px;
-  padding:20px;backdrop-filter:blur(10px);}
-.card-title{font-size:.8rem;text-transform:uppercase;letter-spacing:.5px;color:var(--muted);
-  margin-bottom:12px;display:flex;align-items:center;gap:8px;}
+/* ===== CARDS ===== */
+.card{background:var(--card);border:1px solid var(--border);border-radius:var(--radius);
+  padding:22px;box-shadow:var(--shadow);}
+.card:hover{box-shadow:var(--shadow-md);}
+.card-title{font-size:.78rem;text-transform:uppercase;letter-spacing:.6px;color:var(--muted);
+  margin-bottom:14px;display:flex;align-items:center;gap:8px;font-weight:600;}
 .card-title .dot{width:8px;height:8px;border-radius:50%;}
 
-/* Sidebar items */
-.sidebar h3{font-size:.85rem;color:var(--muted);text-transform:uppercase;
-  letter-spacing:.5px;margin-bottom:12px;}
+/* ===== SIDEBAR ===== */
+.sidebar h3{font-size:.82rem;color:var(--muted);text-transform:uppercase;
+  letter-spacing:.5px;margin-bottom:12px;font-weight:600;}
 .area-chip{display:flex;align-items:center;gap:10px;padding:10px 14px;
-  background:rgba(99,102,241,.08);border:1px solid rgba(99,102,241,.2);
-  border-radius:10px;margin-bottom:8px;font-size:.85rem;}
-.area-chip .color-dot{width:12px;height:12px;border-radius:50%;flex-shrink:0;}
+  background:var(--accent-light);border:1px solid #d0dff5;
+  border-radius:10px;margin-bottom:8px;font-size:.84rem;font-weight:500;
+  transition:box-shadow .2s;}
+.area-chip:hover{box-shadow:var(--shadow);}
+.area-chip .color-dot{width:12px;height:12px;border-radius:50%;flex-shrink:0;
+  box-shadow:0 0 0 2px rgba(255,255,255,.9),0 0 0 3px currentColor;}
 .filter-group{margin-top:20px;}
-.filter-group label{display:block;padding:6px 0;font-size:.82rem;cursor:pointer;
-  display:flex;align-items:center;gap:8px;}
-.filter-group label:hover{color:#fff;}
+.filter-group label{display:flex;align-items:center;gap:8px;padding:5px 0;
+  font-size:.82rem;cursor:pointer;color:var(--text2);transition:color .15s;}
+.filter-group label:hover{color:var(--accent);}
 
-/* Scrollbar */
+/* ===== SCROLLBAR ===== */
 ::-webkit-scrollbar{width:6px;}
 ::-webkit-scrollbar-track{background:transparent;}
-::-webkit-scrollbar-thumb{background:var(--border);border-radius:3px;}
+::-webkit-scrollbar-thumb{background:#cbd5e0;border-radius:3px;}
+::-webkit-scrollbar-thumb:hover{background:#a0aec0;}
 
-/* Loader */
-.loader-overlay{position:fixed;inset:0;background:var(--bg);display:flex;
-  align-items:center;justify-content:center;z-index:9999;transition:opacity .5s;}
+/* ===== LOADER ===== */
+.loader-overlay{position:fixed;inset:0;background:rgba(255,255,255,.92);display:flex;
+  align-items:center;justify-content:center;z-index:9999;transition:opacity .5s;
+  backdrop-filter:blur(8px);}
 .loader-overlay.hidden{opacity:0;pointer-events:none;}
-.spinner{width:48px;height:48px;border:3px solid var(--border);border-top-color:var(--accent);
-  border-radius:50%;animation:spin .8s linear infinite;}
+.spinner{width:44px;height:44px;border:3px solid #e2e8f0;border-top-color:var(--accent);
+  border-radius:50%;animation:spin .7s linear infinite;}
 @keyframes spin{to{transform:rotate(360deg);}}
 
-/* Status bar */
-.status-bar{padding:8px 40px;background:rgba(99,102,241,.06);
-  border-bottom:1px solid var(--border);font-size:.82rem;color:var(--muted);
-  display:flex;align-items:center;gap:12px;}
-.count-badge{background:var(--accent);color:#fff;padding:2px 10px;border-radius:20px;
-  font-size:.75rem;font-weight:600;}
+/* ===== STATUS BAR ===== */
+.status-bar{padding:10px 40px;background:var(--accent-light);
+  border-bottom:1px solid #d0dff5;font-size:.82rem;color:var(--accent);
+  display:flex;align-items:center;gap:12px;font-weight:500;}
+.count-badge{background:var(--accent);color:#fff;padding:2px 12px;border-radius:20px;
+  font-size:.73rem;font-weight:700;min-width:24px;text-align:center;}
 
-/* Responsive */
+/* ===== RESPONSIVE ===== */
 @media(max-width:1024px){
   .dash-grid{grid-template-columns:1fr;grid-template-rows:auto auto auto;}
   .sidebar{grid-row:auto;border-right:none;border-bottom:1px solid var(--border);}
   .charts-area{grid-template-columns:1fr;}
   .controls,.table-container{padding-left:20px;padding-right:20px;}
+  .header{padding:16px 20px;}
 }
 
-/* Leaflet overrides */
-.leaflet-container{background:var(--bg)!important;}
-.custom-popup .leaflet-popup-content-wrapper{background:var(--card);color:var(--text);
-  border:1px solid var(--border);border-radius:10px;box-shadow:var(--glow);}
-.custom-popup .leaflet-popup-tip{background:var(--card);}
-.area-label{font-size:.75rem;color:var(--text);background:transparent;border:none;
-  box-shadow:none;text-shadow:0 1px 3px rgba(0,0,0,.8);font-weight:600;}
+/* ===== LEAFLET OVERRIDES ===== */
+.leaflet-container{background:#f0f4f8!important;}
+.custom-popup .leaflet-popup-content-wrapper{background:#fff;color:var(--text);
+  border:1px solid var(--border);border-radius:10px;box-shadow:var(--shadow-lg);
+  font-family:'Noto Sans JP',sans-serif;}
+.custom-popup .leaflet-popup-tip{background:#fff;}
+.area-label{font-size:.72rem;color:var(--text);background:transparent;border:none;
+  box-shadow:none;text-shadow:0 1px 3px rgba(255,255,255,.8);font-weight:600;}
+
+/* ===== MISC ===== */
+.back-btn{position:absolute;right:40px;top:18px;}
+@media(max-width:768px){.back-btn{position:static;margin-top:8px;}}
 </style>
 </head>
 <body>
@@ -163,18 +189,21 @@ input[type="checkbox"]{width:16px;height:16px;accent-color:var(--accent);cursor:
   </div>
   <div class="status-bar" id="statusBar" style="display:none;">
     <span>選択中のエリア:</span><span class="count-badge" id="selectedCount">0</span>
-    <span id="selectedNames" style="color:var(--text);"></span>
+    <span id="selectedNames"></span>
   </div>
-  <div class="table-container"><div id="resultArea"></div></div>
+  <div style="padding-top:20px;">
+    <div class="table-container"><div id="resultArea"></div></div>
+  </div>
 </div>
 
 <!-- ==================== PAGE 2 ==================== -->
 <div class="page" id="page2">
-  <div class="header">
+  <div class="header" style="position:relative;">
     <div><span class="step-badge">STEP 2</span>
       <h1>エリア指標比較ダッシュボード</h1></div>
     <div class="subtitle">選択エリアの強み・弱みを多角的に比較分析します</div>
-    <button class="btn btn-secondary" style="position:absolute;right:40px;top:24px;"
+    <button class="btn btn-secondary back-btn"
+      style="background:rgba(255,255,255,.18);color:#fff;border-color:rgba(255,255,255,.3);"
       onclick="goToPage1()">← エリア選択に戻る</button>
   </div>
   <div class="dash-grid">
@@ -215,39 +244,46 @@ input[type="checkbox"]{width:16px;height:16px;accent-color:var(--accent);cursor:
 let popData=[], martData=[], areaMap={}, areaInfo={}, indexMap={};
 let targetId=null, selectedIds=new Set(), sortCol='popDiff', sortAsc=true;
 let map=null, radarChart=null, barChart=null, diffChart=null;
-const COLORS=['#6366f1','#06b6d4','#f59e0b','#ef4444','#10b981','#ec4899',
-  '#8b5cf6','#14b8a6','#f97316','#64748b','#84cc16','#e879f9'];
-const AGE_KEYS=['人口_10歳未満','人口_10代','人口_20代','人口_30代','人口_40代','人口_50代','人口_60代','人口_70歳以上'];
+const COLORS=['#1a73e8','#00b8a9','#ff6d00','#e53935','#43a047','#d81b60',
+  '#5e35b1','#00acc1','#fb8c00','#546e7a','#7cb342','#ab47bc'];
+const AGE_KEYS=['人口_10歳未満','人口_10代','人口_20代','人口_30代',
+  '人口_40代','人口_50代','人口_60代','人口_70歳以上'];
 const AGE_LABELS=['~10歳','10代','20代','30代','40代','50代','60代','70歳~'];
 let IND_KEYS=[];
 
 // ===== LOAD DATA =====
 async function init(){
   try{
-    const [pRes,mRes]=await Promise.all([fetch('master_population.json'),fetch('mart_index_normalized.json')]);
-    popData=await pRes.json(); martData=await mRes.json();
-    // build area map from mart
+    const [pRes,mRes]=await Promise.all([
+      fetch('master_population.json'),
+      fetch('mart_index_normalized.json')
+    ]);
+    popData=await pRes.json();
+    martData=await mRes.json();
     martData.forEach(r=>{
       areaMap[r.area_id]=r.area_name;
-      if(!areaInfo[r.area_id]) areaInfo[r.area_id]={lat:r.latitude,lng:r.longitude,
-        pref:r.prefecture,region:r.region,type:r.area_type};
+      if(!areaInfo[r.area_id]) areaInfo[r.area_id]={
+        lat:r.latitude, lng:r.longitude,
+        pref:r.prefecture, region:r.region, type:r.area_type
+      };
     });
-    // build index map
     martData.forEach(r=>{indexMap[r.index_code]=r.index_name;});
-    // detect industry keys
     if(popData.length>0){
       IND_KEYS=Object.keys(popData[0]).filter(k=>k.startsWith('産業_')).sort();
     }
-    // populate dropdown
     const sel=document.getElementById('targetArea');
     const sorted=Object.entries(areaMap).sort((a,b)=>a[0].localeCompare(b[0]));
     sorted.forEach(([id,name])=>{
-      const o=document.createElement('option');o.value=id;o.textContent=`${name} (${id})`;sel.appendChild(o);
+      const o=document.createElement('option');
+      o.value=id;o.textContent=`${name} (${id})`;sel.appendChild(o);
     });
     sel.addEventListener('change',()=>{
       document.getElementById('btnAnalyze').disabled=!sel.value;
     });
-  }catch(e){console.error(e);alert('データの読み込みに失敗しました。JSONファイルが同じディレクトリにあるか確認してください。');}
+  }catch(e){
+    console.error(e);
+    alert('データの読み込みに失敗しました。JSONファイルが同じディレクトリにあるか確認してください。');
+  }
   document.getElementById('loader').classList.add('hidden');
 }
 
@@ -284,14 +320,12 @@ function runAnalysis(){
       region:info.region||'',type:info.type||'',age,ind});
   });
 
-  // sort
   rows.sort((a,b)=>{
     let va=a[sortCol],vb=b[sortCol];
     if(sortCol==='name')return sortAsc?va.localeCompare(vb):vb.localeCompare(va);
     return sortAsc?va-vb:vb-va;
   });
 
-  // render table
   const maxPop=Math.max(...rows.map(r=>r.popDiff),1);
   let html=`<table><thead><tr>
     <th class="check-col"><input type="checkbox" id="checkAll" onchange="toggleAll(this)"></th>
@@ -304,22 +338,27 @@ function runAnalysis(){
   </tr></thead><tbody>`;
   rows.forEach(r=>{
     const popPct=(r.popDiff/maxPop*100).toFixed(1);
-    const ageColor=simColor(r.ageSim); const indColor=simColor(r.indSim);
+    const ageColor=simColor(r.ageSim);
+    const indColor=simColor(r.indSim);
     html+=`<tr>
       <td class="check-col"><input type="checkbox" value="${r.id}" onchange="onCheck(this)"></td>
-      <td><strong>${r.name}</strong><br><span style="color:var(--muted);font-size:.75rem;">${r.id}</span></td>
+      <td><strong>${r.name}</strong><br>
+        <span style="color:var(--muted);font-size:.73rem;">${r.id}</span></td>
       <td><span class="tag tag-region">${r.region}</span></td>
       <td><span class="tag tag-type">${r.type}</span></td>
       <td class="bar-cell">
-        <div class="bar-bg"><div class="bar-fill" style="width:${popPct}%;background:linear-gradient(90deg,#6366f1,#38bdf8);"></div></div>
+        <div class="bar-bg"><div class="bar-fill"
+          style="width:${popPct}%;background:linear-gradient(90deg,#1a73e8,#4f8cff);"></div></div>
         <div class="bar-val">${Math.round(r.popDiff).toLocaleString()}人</div>
       </td>
       <td class="bar-cell">
-        <div class="bar-bg"><div class="bar-fill" style="width:${(r.ageSim*100).toFixed(1)}%;background:${ageColor};"></div></div>
+        <div class="bar-bg"><div class="bar-fill"
+          style="width:${(r.ageSim*100).toFixed(1)}%;background:${ageColor};"></div></div>
         <div class="bar-val">${(r.ageSim*100).toFixed(1)}%</div>
       </td>
       <td class="bar-cell">
-        <div class="bar-bg"><div class="bar-fill" style="width:${(r.indSim*100).toFixed(1)}%;background:${indColor};"></div></div>
+        <div class="bar-bg"><div class="bar-fill"
+          style="width:${(r.indSim*100).toFixed(1)}%;background:${indColor};"></div></div>
         <div class="bar-val">${(r.indSim*100).toFixed(1)}%</div>
       </td>
     </tr>`;
@@ -327,20 +366,20 @@ function runAnalysis(){
   html+=`</tbody></table>`;
   document.getElementById('resultArea').innerHTML=html;
   document.getElementById('statusBar').style.display='flex';
-  // store for later
   window._rows=rows; window._tPop=tPop;
 }
 
 function simColor(v){
-  if(v>=0.98)return'#10b981';if(v>=0.95)return'#06b6d4';
-  if(v>=0.9)return'#6366f1';return'#64748b';
+  if(v>=0.98)return'#43a047';if(v>=0.95)return'#00b8a9';
+  if(v>=0.9)return'#1a73e8';return'#90a4ae';
 }
 function sortIcon(col){
   if(sortCol!==col)return'<span class="sort-arrow">⇅</span>';
   return sortAsc?'<span class="sort-arrow">▲</span>':'<span class="sort-arrow">▼</span>';
 }
 function reSort(col){
-  if(sortCol===col)sortAsc=!sortAsc;else{sortCol=col;sortAsc=col==='popDiff';}
+  if(sortCol===col)sortAsc=!sortAsc;
+  else{sortCol=col;sortAsc=col==='popDiff';}
   runAnalysis();
 }
 function toggleAll(el){
@@ -377,32 +416,33 @@ function goToPage1(){
 // ===== PAGE 2 DASHBOARD =====
 function buildDashboard(){
   const ids=[targetId,...selectedIds];
-  // Area chips
   let chipHtml='';
   ids.forEach((id,i)=>{
     const c=COLORS[i%COLORS.length];
     const label=id===targetId?'⭐ '+areaMap[id]+' (対象)':areaMap[id];
-    chipHtml+=`<div class="area-chip"><span class="color-dot" style="background:${c}"></span>
-      <span>${label}</span><span style="color:var(--muted);font-size:.75rem;margin-left:auto;">${id}</span></div>`;
+    chipHtml+=`<div class="area-chip" style="border-color:${c}22;">
+      <span class="color-dot" style="background:${c};color:${c};"></span>
+      <span>${label}</span>
+      <span style="color:var(--muted);font-size:.72rem;margin-left:auto;">${id}</span>
+    </div>`;
   });
   document.getElementById('areaChips').innerHTML=chipHtml;
 
-  // Index filters - group by first char of code or just list unique codes
-  const allCodes=[...new Set(martData.filter(r=>ids.includes(r.area_id)).map(r=>r.index_code))].sort();
+  const allCodes=[...new Set(
+    martData.filter(r=>ids.includes(r.area_id)).map(r=>r.index_code)
+  )].sort();
   let filterHtml='<div style="max-height:400px;overflow-y:auto;">';
   allCodes.forEach(code=>{
     filterHtml+=`<label><input type="checkbox" class="idx-filter" value="${code}" checked
       onchange="updateCharts()"> ${indexMap[code]||code}</label>`;
   });
   filterHtml+='</div>';
-  filterHtml+='<div style="margin-top:10px;display:flex;gap:8px;">'+
-    '<button class="btn btn-secondary" style="font-size:.75rem;padding:6px 12px;" onclick="toggleFilters(true)">全選択</button>'+
-    '<button class="btn btn-secondary" style="font-size:.75rem;padding:6px 12px;" onclick="toggleFilters(false)">全解除</button></div>';
+  filterHtml+='<div style="margin-top:12px;display:flex;gap:8px;">'+
+    '<button class="btn btn-secondary" style="font-size:.73rem;padding:6px 14px;" onclick="toggleFilters(true)">全選択</button>'+
+    '<button class="btn btn-secondary" style="font-size:.73rem;padding:6px 14px;" onclick="toggleFilters(false)">全解除</button></div>';
   document.getElementById('indexFilters').innerHTML=filterHtml;
 
-  // Map
   setTimeout(()=>{initMap(ids);},100);
-  // Charts
   setTimeout(()=>{updateCharts();},200);
 }
 
@@ -413,9 +453,8 @@ function toggleFilters(val){
 
 function initMap(ids){
   if(map){map.remove();map=null;}
-  map=L.map('mapContainer',{zoomControl:true,
-    attributionControl:true}).setView([36.5,139.5],5);
-  L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png',{
+  map=L.map('mapContainer',{zoomControl:true,attributionControl:true}).setView([36.5,139.5],5);
+  L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png',{
     attribution:'&copy; OpenStreetMap',maxZoom:18
   }).addTo(map);
   const bounds=[];
@@ -424,14 +463,13 @@ function initMap(ids){
     const c=COLORS[i%COLORS.length];
     const isTarget=id===targetId;
     const marker=L.circleMarker([info.lat,info.lng],{
-      radius:isTarget?10:7,fillColor:c,color:'#fff',weight:isTarget?3:1,
+      radius:isTarget?11:8,fillColor:c,color:'#fff',weight:isTarget?3:2,
       fillOpacity:.85
     }).addTo(map);
     marker.bindPopup(`<div class="custom-popup"><strong>${areaMap[id]}</strong><br>
       ${info.pref} / ${info.region}<br>タイプ: ${info.type}</div>`);
-    // label
     L.marker([info.lat,info.lng],{icon:L.divIcon({
-      className:'area-label',html:areaMap[id],iconSize:[80,20],iconAnchor:[40,-8]
+      className:'area-label',html:areaMap[id],iconSize:[80,20],iconAnchor:[40,-10]
     })}).addTo(map);
     bounds.push([info.lat,info.lng]);
   });
@@ -440,10 +478,11 @@ function initMap(ids){
 
 function updateCharts(){
   const ids=[targetId,...selectedIds];
-  const checkedCodes=new Set([...document.querySelectorAll('.idx-filter:checked')].map(cb=>cb.value));
+  const checkedCodes=new Set(
+    [...document.querySelectorAll('.idx-filter:checked')].map(cb=>cb.value)
+  );
   const filteredCodes=[...checkedCodes].sort();
 
-  // Get data per area
   const datasets={};
   ids.forEach(id=>{
     datasets[id]={};
@@ -451,11 +490,9 @@ function updateCharts(){
       .forEach(r=>{datasets[id][r.index_code]=r.normalized_score;});
   });
 
-  // Limit labels for readability - take top 20 if too many
   let displayCodes=filteredCodes;
   if(filteredCodes.length>30){displayCodes=filteredCodes.slice(0,30);}
   const labels=displayCodes.map(c=>indexMap[c]||c);
-  // Truncate long labels
   const shortLabels=labels.map(l=>l.length>12?l.slice(0,12)+'…':l);
 
   // ---- Radar Chart ----
@@ -464,31 +501,34 @@ function updateCharts(){
   const radarLabels=radarCodes.map(c=>{const n=indexMap[c]||c;return n.length>10?n.slice(0,10)+'…':n;});
   const radarDS=ids.map((id,i)=>({
     label:areaMap[id],data:radarCodes.map(c=>datasets[id][c]||0),
-    borderColor:COLORS[i%COLORS.length],backgroundColor:COLORS[i%COLORS.length]+'33',
+    borderColor:COLORS[i%COLORS.length],
+    backgroundColor:COLORS[i%COLORS.length]+'22',
     pointRadius:2,borderWidth:2
   }));
   radarChart=new Chart(document.getElementById('radarChart'),{
     type:'radar',data:{labels:radarLabels,datasets:radarDS},
-    options:{responsive:true,plugins:{legend:{labels:{color:'#94a3b8',font:{size:11}}}},
-      scales:{r:{grid:{color:'rgba(255,255,255,.06)'},ticks:{display:false,stepSize:20},
-        pointLabels:{color:'#94a3b8',font:{size:9}},min:0,max:100}}}
+    options:{responsive:true,
+      plugins:{legend:{labels:{color:'#4a5568',font:{size:11,family:"'Noto Sans JP',sans-serif"}}}},
+      scales:{r:{grid:{color:'#e2e8f0'},ticks:{display:false,stepSize:20},
+        pointLabels:{color:'#4a5568',font:{size:9,family:"'Noto Sans JP',sans-serif"}},
+        min:0,max:100}}}
   });
 
   // ---- Bar Chart ----
   if(barChart){barChart.destroy();}
   const barDS=ids.map((id,i)=>({
     label:areaMap[id],data:displayCodes.map(c=>datasets[id][c]||0),
-    backgroundColor:COLORS[i%COLORS.length]+'cc',borderRadius:4,barPercentage:.7
+    backgroundColor:COLORS[i%COLORS.length]+'bb',borderRadius:4,barPercentage:.7
   }));
   barChart=new Chart(document.getElementById('barChart'),{
     type:'bar',data:{labels:shortLabels,datasets:barDS},
     options:{responsive:true,interaction:{mode:'index',intersect:false},
-      plugins:{legend:{labels:{color:'#94a3b8',font:{size:11}}}},
-      scales:{x:{ticks:{color:'#64748b',font:{size:8},maxRotation:60},grid:{color:'rgba(255,255,255,.04)'}},
-        y:{ticks:{color:'#64748b'},grid:{color:'rgba(255,255,255,.06)'},min:0,max:100}}}
+      plugins:{legend:{labels:{color:'#4a5568',font:{size:11,family:"'Noto Sans JP',sans-serif"}}}},
+      scales:{x:{ticks:{color:'#718096',font:{size:8},maxRotation:60},grid:{color:'#f0f0f0'}},
+        y:{ticks:{color:'#718096'},grid:{color:'#f0f0f0'},min:0,max:100}}}
   });
 
-  // ---- Diff Chart (difference from target) ----
+  // ---- Diff Chart ----
   if(diffChart){diffChart.destroy();}
   const compIds=[...selectedIds];
   const diffDS=compIds.map((id,i)=>({
@@ -497,16 +537,16 @@ function updateCharts(){
     }),
     backgroundColor:displayCodes.map(c=>{
       const tv=datasets[targetId]?.[c]||0;const cv=datasets[id]?.[c]||0;
-      return cv>=tv?'rgba(16,185,129,.6)':'rgba(239,68,68,.6)';
+      return cv>=tv?'rgba(67,160,71,.55)':'rgba(229,57,53,.55)';
     }),borderRadius:3
   }));
   diffChart=new Chart(document.getElementById('diffChart'),{
     type:'bar',data:{labels:shortLabels,datasets:diffDS},
     options:{responsive:true,indexAxis:'x',
-      plugins:{legend:{labels:{color:'#94a3b8',font:{size:11}}},
+      plugins:{legend:{labels:{color:'#4a5568',font:{size:11,family:"'Noto Sans JP',sans-serif"}}},
         tooltip:{callbacks:{label:ctx=>ctx.dataset.label+': '+(ctx.raw>0?'+':'')+ctx.raw.toFixed(1)}}},
-      scales:{x:{ticks:{color:'#64748b',font:{size:8},maxRotation:60},grid:{color:'rgba(255,255,255,.04)'}},
-        y:{ticks:{color:'#64748b'},grid:{color:'rgba(255,255,255,.06)'}}}}
+      scales:{x:{ticks:{color:'#718096',font:{size:8},maxRotation:60},grid:{color:'#f0f0f0'}},
+        y:{ticks:{color:'#718096'},grid:{color:'#f0f0f0'}}}}
   });
 }
 
