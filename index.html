@@ -270,6 +270,7 @@ async function init(){
   try{
     const [pR,mR]=await Promise.all([fetch('master_population.json'),fetch('mart_index_normalized.json')]);
     popData=await pR.json();martData=await mR.json();
+    // Area info from mart
     martData.forEach(r=>{
       areaMap[r.area_id]=r.area_name;
       if(!areaInfo[r.area_id]) areaInfo[r.area_id]={
@@ -277,8 +278,10 @@ async function init(){
         pref:r.prefecture||'',region:r.region||'',type:r.area_type||''};
       indexMap[r.index_code]=r.index_name;
     });
+    // Pop map
     popData.forEach(r=>{popMap[r.area_id]=r;});
     if(popData.length>0) IND_KEYS=Object.keys(popData[0]).filter(k=>k.startsWith('産業_')).sort();
+    // WB index mapping
     const wbT={},wbCT={};
     martData.forEach(r=>{
       const wb=r.wb_index;if(!wb)return;
@@ -294,6 +297,7 @@ async function init(){
       Object.entries(wbT[wb]).forEach(([aid,sc])=>{wbAvg[wb][aid]=sc.reduce((a,b)=>a+b,0)/sc.length;});
       wbCodes[wb]=[...wbCT[wb]].sort();
     });
+    // Filters
     const regions=[...new Set(Object.values(areaInfo).map(a=>a.region).filter(Boolean))].sort();
     const types=[...new Set(Object.values(areaInfo).map(a=>a.type).filter(Boolean))].sort();
     const prefs=[...new Set(Object.values(areaInfo).map(a=>a.pref).filter(Boolean))].sort();
@@ -364,6 +368,7 @@ function buildS2(){
   if(!map2)initMap(2);
   const tp=popMap[targetId];
   if(!tp){
+    // fallback: no pop data for this area, show table without similarity
     s2Rows=Object.entries(areaInfo).filter(([id])=>id!==targetId).map(([id,a])=>({id,name:a.name,region:a.region,type:a.type,popDiff:0,ageSim:0,indSim:0}));
     renderS2();updS2();return;
   }
