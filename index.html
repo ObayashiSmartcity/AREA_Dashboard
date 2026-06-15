@@ -1,0 +1,109 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<title>エリア強み弱みダッシュボード</title>
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<style>
+body { margin:0; font-family:sans-serif; display:flex; }
+#sidebar {
+  width:260px; background:#1e293b; color:white;
+  padding:15px; height:100vh; overflow:auto;
+}
+#content { flex:1; padding:20px; }
+select, input { width:100%; margin-bottom:10px; }
+.card { background:#f1f5f9; padding:10px; margin:10px 0; }
+</style>
+</head>
+
+<body>
+
+<div id="sidebar">
+  <h3>フィルタ</h3>
+
+  <label>エリア選択</label>
+  <select id="areaSelect"></select>
+
+  <label>地域</label>
+  <select id="regionFilter"></select>
+
+  <label>エリアタイプ</label>
+  <select id="typeFilter"></select>
+</div>
+
+<div id="content">
+  <h2 id="title">エリア分析</h2>
+
+  <canvas id="chart"></canvas>
+
+  <h3>強み（Top5）</h3>
+  <div id="strength"></div>
+
+  <h3>弱み（Bottom5）</h3>
+  <div id="weakness"></div>
+</div>
+
+<script>
+
+// JSON読み込み
+fetch('mart_index_normalized.json')
+.then(res => res.json())
+.then(data => {
+
+  // ユニーク取得
+  const areas = [...new Set(data.map(d => d.area_name))];
+  const regions = [...new Set(data.map(d => d.region))];
+  const types = [...new Set(data.map(d => d.area_type))];
+
+  const areaSel = document.getElementById("areaSelect");
+  const regionSel = document.getElementById("regionFilter");
+  const typeSel = document.getElementById("typeFilter");
+
+  areas.forEach(a => areaSel.add(new Option(a,a)));
+  regions.forEach(r => regionSel.add(new Option(r,r)));
+  types.forEach(t => typeSel.add(new Option(t,t)));
+
+  const ctx = document.getElementById('chart');
+
+  function render(){
+    let selectedArea = areaSel.value;
+
+    let filtered = data.filter(d => d.area_name === selectedArea);
+
+    document.getElementById("title").innerText = selectedArea;
+
+    // スコアソート
+    filtered.sort((a,b)=>b.normalized_score-a.normalized_score);
+
+    const top5 = filtered.slice(0,5);
+    const bottom5 = filtered.slice(-5).reverse();
+
+    // 表示
+    document.getElementById("strength").innerHTML =
+      top5.map(d=>`<div class="card">${d.index_name} : ${d.normalized_score}</div>`).join("");
+
+    document.getElementById("weakness").innerHTML =
+      bottom5.map(d=>`<div class="card">${d.index_name} : ${d.normalized_score}</div>`).join("");
+
+    // グラフ
+    if(window.chart) window.chart.destroy();
+
+    window.chart = new Chart(ctx, {
+      type:'bar',
+      data:{
+        labels: top5.map(d=>d.index_name),
+        datasets:[{
+          label:'強みスコア',
+          data: top5.map(d=>d.normalized_score)
+        }]
+      }
+    });
+  }
+
+  areaSel.onchange = render;
+  render();
+});
+
+</script>
+</body>
+</html>
