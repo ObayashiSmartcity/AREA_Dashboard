@@ -219,7 +219,6 @@ input[type="checkbox"]{width:16px;height:16px;accent-color:var(--accent);cursor:
       <span class="badge bgr" id="bSel">0 選択中</span>
     </div>
     <div class="content">
-      <!-- STEP 1 -->
       <div class="page active" id="step1">
         <div class="sh"><h2>&#128205; STEP 1 ─ 対象エリア設定</h2><span class="desc">分析の中心となるエリアを1つ選択</span><div style="flex:1"></div>
           <button class="btn bp" id="btn2" disabled onclick="goStep(2)">次へ：比較エリア選定 →</button></div>
@@ -245,7 +244,6 @@ input[type="checkbox"]{width:16px;height:16px;accent-color:var(--accent);cursor:
         </div>
       </div>
 
-      <!-- STEP 2: SIMILARITY -->
       <div class="page" id="step2">
         <div class="sh"><h2>&#128269; STEP 2 ─ 比較エリア選定</h2><span class="desc">人口規模・年齢構成・産業構成の類似度から比較エリアを選択</span><div style="flex:1"></div>
           <button class="btn bsc" onclick="goStep(1)">← 戻る</button>
@@ -275,13 +273,11 @@ input[type="checkbox"]{width:16px;height:16px;accent-color:var(--accent);cursor:
         </div>
       </div>
 
-      <!-- STEP 3: WB INDEX -->
       <div class="page" id="step3">
         <div class="sh"><h2>&#128202; STEP 3 ─ 比較ダッシュボード</h2><span class="desc">WBインデックスの強み・弱みを比較</span><div style="flex:1"></div>
           <button class="btn bsc" onclick="goStep(2)">← 戻る</button></div>
         
         <div class="split-layout">
-          <!-- 左：レーダーの代わりに全体のWBインデックス比較棒グラフを配置 -->
           <div class="split-left">
             <div class="card" id="wbCard">
               <div class="ctit" id="wbTit"><span class="dot" style="background:var(--accent);"></span>WBインデックス別スコア比較</div>
@@ -289,13 +285,11 @@ input[type="checkbox"]{width:16px;height:16px;accent-color:var(--accent);cursor:
               <div class="cscroll" id="wbScr"><canvas id="wbChart"></canvas></div>
             </div>
           </div>
-          <!-- 右：エリアマップ -->
           <div class="split-right">
             <div class="card"><div class="ctit">&#128506;️ エリアマップ</div><div id="map3"></div></div>
           </div>
         </div>
 
-        <!-- 画面下部に配置されたドリルダウン詳細エリア -->
         <div class="drilldown-section" id="drilldownSection" style="display:none;">
           <div id="drillBar"></div>
           <div class="ctit" id="detailTit"><span class="dot" style="background:var(--green);"></span>詳細指標比較</div>
@@ -357,8 +351,10 @@ async function init(){
     document.getElementById('bTot').textContent=n+' エリア';
     document.getElementById('stxt').textContent=n+' エリア / 対象未選択';
     applyF();initMap(1);
-  }catch(e){console.error(e);alert('JSONファイルの読み込みに失敗しました。
-master_population.json と mart_index_normalized.json を配置してください。');}
+  }catch(e){
+    console.error(e);
+    alert('JSONファイルの読み込みに失敗しました。 master_population.json と mart_index_normalized.json を配置してください。');
+  }
   document.getElementById('loader').classList.add('hidden');
 }
 function fSel(id,o){const s=document.getElementById(id);o.forEach(v=>{const op=document.createElement('option');op.value=v;op.textContent=v;s.appendChild(op);});}
