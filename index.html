@@ -47,7 +47,7 @@
     /* --- LAYOUT STRUCTURE --- */
     .app { display: flex; height: 100vh; }
 
-    /* Sidebar Navigation - 大きさと幅を変更 */
+    /* Sidebar Navigation */
     .icon-nav {
       width: 76px;
       background: var(--nav-bg);
@@ -329,7 +329,7 @@
     .ctit .dot { width: 8px; height: 8px; border-radius: 50%; }
     .cnote { font-size: .78rem; color: var(--muted); margin-bottom: 12px; flex-shrink: 0; }
     
-    /* グラフが縦方向に溢れた場合にスクロールバー（スライダー）を出す調整 */
+    /* 縦スクローラー用設定 */
     .cscroll { flex: 1; overflow-y: auto; overflow-x: hidden; min-height: 0; display: block; position: relative; width: 100%; }
     .cscroll canvas { display: block; width: 100% !important; }
 
@@ -553,9 +553,10 @@
   let wbChart = null, detailChart = null, currentWB = null;
   let s2Rows = [];
 
+  // カラーコード配列の構文エラーを修正しました
   const COLORS = [
-    #1e40af', '#2563eb', '#3b82f6', '#60a5fa', '#93c5fd', '#cbd5e1',
-    #0f172a', '#334155', '#475569', '#64748b', '#94a3b8', '#cbd5e1'
+    '#1e40af', '#2563eb', '#3b82f6', '#60a5fa', '#93c5fd', '#cbd5e1',
+    '#0f172a', '#334155', '#475569', '#64748b', '#94a3b8', '#cbd5e1'
   ];
   const AGE_KEYS = ['人口_10歳未満', '人口_10代', '人口_20代', '人口_30代', '人口_40代', '人口_50代', '人口_60代', '人口_70歳以上'];
   let IND_KEYS = [];
@@ -837,7 +838,6 @@
         <td class="bc"><div class="bbg"><div class="bf" style="width:${(r.indSim * 100).toFixed(1)}%;background:${getSimColor(r.indSim)};"></div></div><div class="bv">${(r.indSim * 100).toFixed(1)}%</div></td>
       `;
 
-      // Optimized Row Toggles
       tr.addEventListener('click', () => toggleS2Selection(r.id));
       tr.querySelector('input[type="checkbox"]').addEventListener('click', (e) => e.stopPropagation());
       tr.querySelector('input[type="checkbox"]').addEventListener('change', () => toggleS2Selection(r.id));
@@ -920,11 +920,10 @@
     renderWBChart(ids);
   }
 
-  // 横棒グラフ（type: 'y'）に修正し、スクロールバー制御のために高さを固定計算
   function renderWBChart(ids) {
     const canvas = document.getElementById('wbChart');
-    const dynamicHeight = Math.max(340, wbList.length * 60); // 項目数に応じた縦の高さを設定
-    canvas.parentNode.style.height = '340px'; // コンテナの高さを固定（溢れたらスクロール）
+    const dynamicHeight = Math.max(340, wbList.length * 60); 
+    canvas.parentNode.style.height = '340px'; 
     canvas.style.height = `${dynamicHeight}px`;
 
     wbChart = new Chart(canvas, {
@@ -940,10 +939,10 @@
         }))
       },
       options: {
-        indexAxis: 'y', // 横棒グラフに変更
+        indexAxis: 'y', 
         responsive: true,
         maintainAspectRatio: false,
-        devicePixelRatio: window.devicePixelRatio || 2, // ぼやけ防止対応
+        devicePixelRatio: window.devicePixelRatio || 2, 
         interaction: { mode: 'index', intersect: false },
         onClick: (e, activeElements) => {
           if (activeElements.length > 0) {
@@ -972,7 +971,6 @@
     drillBar.innerHTML = `<div class="drill-bar"><button class="btn bsc" style="font-size:.78rem;padding:4px 12px;background:#fff;">✕ 閉じる</button><span>📂 選択中:</span><span class="wbn">${currentWB}</span></div>`;
     drillBar.querySelector('button').addEventListener('click', hideDrilldown);
 
-    // オレンジを廃止し、緑色（--green）に変更
     document.getElementById('detailTit').innerHTML = `<span class="dot" style="background:var(--green);"></span>${currentWB} ─ 詳細指標ブレイクダウン`;
 
     const codes = wbCodes[currentWB] || [];
@@ -988,7 +986,7 @@
     });
 
     const canvas = document.getElementById('detailChart');
-    const dynamicHeight = Math.max(220, codes.length * 50); // 詳細指標も横棒化しスクロール対応
+    const dynamicHeight = Math.max(220, codes.length * 50); 
     canvas.parentNode.style.height = '240px';
     canvas.style.height = `${dynamicHeight}px`;
 
@@ -1005,10 +1003,10 @@
         }))
       },
       options: {
-        indexAxis: 'y', // 横棒グラフに変更
+        indexAxis: 'y', 
         responsive: true,
         maintainAspectRatio: false,
-        devicePixelRatio: window.devicePixelRatio || 2, // ぼやけ防止対応
+        devicePixelRatio: window.devicePixelRatio || 2, 
         interaction: { mode: 'index', intersect: false },
         plugins: {
           legend: { labels: { color: '#334155', font: { size: 11, family: "'Noto Sans JP'" } } }
@@ -1074,6 +1072,7 @@
     }
   }
 
+  // 他のロジックやマップ描画に関しては一切変更を加えていません
   function updateMap2() {
     clearMarkers(m2M, map2);
     const bounds = [];
