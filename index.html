@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>AREA DASHBOARD</title>
+  <title>エリア比較ダッシュボード</title>
   
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -236,7 +236,6 @@
     tbody tr { transition: background .15s; cursor: pointer; }
     tbody tr:hover { background: #f8fafc; }
     
-    /* 選択された対象エリア行のスタイル（青系ハイライト） */
     tbody tr.sr { background: var(--accent-light); }
     tbody tr.sr td strong { color: var(--accent); }
     
@@ -250,7 +249,7 @@
     .bf { height: 100%; border-radius: 3px; transition: width .6s cubic-bezier(0.4, 0, 0.2, 1); }
     .bv { font-size: .72rem; color: var(--muted); margin-top: 4px; font-weight: 500; }
 
-    /* Tags (地域・タイプ・都道府県をすべて洗練された青系に統一) */
+    /* Tags */
     .tag { display: inline-block; padding: 2px 10px; border-radius: 4px; font-size: .72rem; font-weight: 600; }
     .tgr { background: #e0f2fe; color: #0369a1; }
     .tgt { background: #dbeafe; color: #1e40af; }
@@ -276,6 +275,33 @@
     .bsc { background: var(--surface); color: var(--text2); border: 1px solid var(--border); box-shadow: var(--shadow); }
     .bsc:hover { border-color: var(--muted2); color: var(--text); background: #f8fafc; }
     .btn:disabled { opacity: .4; cursor: not-allowed; transform: none!important; box-shadow: none!important; }
+
+    /* Step 3 指標選択ボタンの配置エリア */
+    .index-btn-container {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 6px;
+      margin-bottom: 12px;
+      flex-shrink: 0;
+    }
+    .idx-btn {
+      padding: 8px 10px;
+      font-size: .75rem;
+      font-weight: 600;
+      background: #f1f5f9;
+      color: var(--text2);
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      cursor: pointer;
+      text-align: center;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      transition: all .15s ease;
+    }
+    .idx-btn:hover { background: #e2e8f0; color: var(--text); }
+    .idx-btn.active { background: var(--accent); color: #fff; border-color: var(--accent); box-shadow: var(--shadow); }
+    .idx-btn.has-drilldown { border-left: 4px solid var(--red); }
 
     /* Maps & Cards */
     #map1, #map2, #map3 { border-radius: var(--radius); border: 1px solid var(--border); box-shadow: var(--shadow); width: 100%; height: 100%; }
@@ -401,7 +427,7 @@
 
   <div class="main">
     <header class="th">
-      <h1>AREA DASHBOARD</h1><span class="sub">── WBインデックスによるエリア比較分析</span>
+      <h1>エリア比較ダッシュボード</h1><span class="sub">── WBインデックスによるエリア比較分析</span>
       <div style="flex:1"></div>
       <span class="badge bst" id="bStp">STEP 1</span>
       <span class="badge bo" id="bTot">-</span>
@@ -512,11 +538,13 @@
           <button class="btn bsc" data-back-to="2">← 戻る</button>
         </div>
         
+        <div class="index-btn-container" id="indexBtnBox"></div>
+
         <div class="split-layout">
           <div class="split-left">
             <div class="card" id="wbCard">
               <div class="ctit" id="wbTit"><span class="dot" style="background:var(--accent);"></span>WBインデックス別スコア比較</div>
-              <div class="cnote" id="wbNote">グラフの棒をクリックすると右側に対象指標のブレイクダウン（詳細）が表示されます</div>
+              <div class="cnote" id="wbNote">上部の指標ボタンをクリックすると右側に対象指標のブレイクダウン（詳細）が表示されます</div>
               <div class="cscroll" id="wbScr"><canvas id="wbChart"></canvas></div>
             </div>
           </div>
@@ -913,14 +941,40 @@
     if (ids.length < 2) { alert('比較エリアを1つ以上選択してください'); goStep(2); return; }
     
     currentWB = null;
-    document.getElementById('drilldownSection').style.display = 'none';
-    document.getElementById('map3Container').style.display = 'flex'; 
 
     if (wbChart) { wbChart.destroy(); wbChart = null; }
     if (detailChart) { detailChart.destroy(); detailChart = null; }
 
     updateMap3(ids);
     renderWBChart(ids);
+    buildIndexButtons(ids); // 20指標ボタンを生成
+  }
+
+  // 20指標ボタンの動的生成エンジン
+  function buildIndexButtons(ids) {
+    const btnBox = document.getElementById('indexBtnBox');
+    btnBox.innerHTML = '';
+
+    wbList.forEach((wb, index) => {
+      const btn = document.createElement('button');
+      btn.className = 'idx-btn has-drilldown';
+      btn.textContent = wb;
+      btn.title = wb;
+      
+      btn.addEventListener('click', () => {
+        document.querySelectorAll('.idx-btn').forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+        drillDown(wb, ids);
+      });
+
+      btnBox.appendChild(btn);
+
+      // 初回ロード時に自動的に最初の指標を選択状態にする
+      if (index === 0) {
+        btn.classList.add('active');
+        drillDown(wb, ids);
+      }
+    });
   }
 
   function renderWBChart(ids) {
@@ -934,7 +988,6 @@
       data: {
         labels: wbList,
         datasets: ids.map((id, i) => {
-          // 対象エリア(i===0)は赤系(#ef4444)でハイライト、それ以外は既存パレット
           const barColor = (i === 0) ? '#ef4444' : COLORS[i % COLORS.length];
           return {
             label: areaMap[id] || id,
@@ -951,11 +1004,6 @@
         maintainAspectRatio: false,
         devicePixelRatio: window.devicePixelRatio || 2, 
         interaction: { mode: 'index', intersect: false },
-        onClick: (e, activeElements) => {
-          if (activeElements.length > 0) {
-            drillDown(wbList[activeElements[0].index], ids);
-          }
-        },
         plugins: {
           legend: { labels: { color: '#334155', font: { size: 11, family: "'Noto Sans JP'" } } }
         },
@@ -977,7 +1025,7 @@
     section.style.display = 'flex';
 
     const drillBar = document.getElementById('drillBar');
-    drillBar.innerHTML = `<div class="drill-bar" style="width:100%;"><button class="btn bsc" style="font-size:.78rem;padding:4px 12px;background:#fff;">✕ 地図に戻る</button><span>📂 選択中:</span><span class="wbn">${currentWB}</span></div>`;
+    drillBar.innerHTML = `<div class="drill-bar" style="width:100%;"><button class="btn bsc" style="font-size:.78rem;padding:4px 12px;background:#fff;">✕ 地図を表示</button><span>📂 選択中のインデックス:</span><span class="wbn">${currentWB}</span></div>`;
     drillBar.querySelector('button').addEventListener('click', hideDrilldown);
 
     document.getElementById('detailTit').innerHTML = `<span class="dot" style="background:var(--red);"></span>${currentWB} ─ 詳細指標ブレイクダウン`;
@@ -1004,7 +1052,6 @@
       data: {
         labels,
         datasets: ids.map((id, i) => {
-          // ドリルダウンの棒グラフも同様に対象エリアを赤系でハイライト
           const barColor = (i === 0) ? '#ef4444' : COLORS[i % COLORS.length];
           return {
             label: areaMap[id] || id,
@@ -1034,6 +1081,9 @@
 
   function hideDrilldown() {
     currentWB = null;
+    // 指標ボタンのアクティブ表示をクリア
+    document.querySelectorAll('.idx-btn').forEach(b => b.classList.remove('active'));
+    
     // 排他制御の復元：ドリルダウンを隠して地図を再表示
     document.getElementById('drilldownSection').style.display = 'none';
     document.getElementById('map3Container').style.display = 'flex';
@@ -1065,7 +1115,6 @@
   function renderMapPin(mapObj, markersArr, lat, lng, color, name, isTarget) {
     if (!lat || !lng) return null;
     
-    // マップ上のピンも対象エリアは赤系にハイライト
     const pinColor = isTarget ? '#ef4444' : color;
     const pin = L.circleMarker([lat, lng], {
       radius: isTarget ? 11 : 8, fillColor: pinColor, color: '#fff', weight: isTarget ? 3 : 2, fillOpacity: .85
