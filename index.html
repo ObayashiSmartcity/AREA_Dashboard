@@ -182,11 +182,6 @@
     .th h1 { font-size: 1.15rem; font-weight: 700; color: var(--text); letter-spacing: -0.01em; }
     .th .sub { font-size: .8rem; color: var(--muted); font-weight: 400; }
     
-    .badge { padding: 4px 14px; border-radius: 6px; font-size: .75rem; font-weight: 600; }
-    .bo { border: 1px solid var(--border); color: var(--text2); background: #f1f5f9; }
-    .bgr { background: var(--accent-light); color: var(--accent); border: 1px solid rgba(37, 99, 235, 0.2); }
-    .bst { background: var(--text); color: #fff; border: none; font-size: .7rem; padding: 4px 10px; text-transform: uppercase; letter-spacing: 0.05em; }
-
     .content { flex: 1; overflow-y: auto; padding: 24px 32px; }
     .page { display: none; height: 100%; }
     .page.active { display: flex; flex-direction: column; animation: fu .3s cubic-bezier(0.4, 0, 0.2, 1); }
@@ -202,37 +197,39 @@
     .split-left { flex: 1.2; display: flex; flex-direction: column; min-width: 0; height: 100%; }
     .split-right { flex: 1; display: flex; flex-direction: column; min-width: 0; height: 100%; }
 
-    /* Step3用：左側に縦並びのアイコンエリアを設けるための特殊レイアウト */
-    .step3-container { display: flex; gap: 14px; flex: 1; min-height: 0; }
-    
-    /* 縦並びのミニマムアイコンコンテナ */
-    .index-v-nav {
+    /* Step3用：グラフの間に縦並びのボタンエリアを設ける特殊レイアウト */
+    .step3-layout { display: flex; gap: 14px; flex: 1; min-height: 0; }
+    .step3-left { flex: 1.2; display: flex; flex-direction: column; min-width: 0; height: 100%; }
+    .step3-right { flex: 1; display: flex; flex-direction: column; min-width: 0; height: 100%; }
+
+    /* グラフとグラフの間に挟む、指標名ボタン用の縦並び細型コンテナ */
+    .index-mid-nav {
       display: flex;
       flex-direction: column;
       gap: 5px;
       overflow-y: auto;
-      padding-right: 4px;
-      width: 46px;
+      padding: 0 4px;
+      width: 140px;
       flex-shrink: 0;
     }
-    .idx-btn-v {
-      width: 38px;
-      height: 38px;
-      font-size: .72rem;
-      font-weight: 700;
+    .idx-btn-mid {
+      width: 100%;
+      padding: 8px 6px;
+      font-size: .7rem;
+      font-weight: 600;
       background: #f1f5f9;
       color: var(--text2);
       border: 1px solid var(--border);
-      border-radius: 8px;
+      border-radius: 6px;
       cursor: pointer;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      flex-shrink: 0;
+      text-align: left;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
       transition: all .15s ease;
     }
-    .idx-btn-v:hover { background: #e2e8f0; color: var(--text); }
-    .idx-btn-v.active { background: var(--accent); color: #fff; border-color: var(--accent); box-shadow: var(--shadow); }
+    .idx-btn-mid:hover { background: #e2e8f0; color: var(--text); }
+    .idx-btn-mid.active { background: var(--accent); color: #fff; border-color: var(--accent); box-shadow: var(--shadow); }
 
     /* KPI Component */
     .kpi-row { display: grid; grid-template-columns: repeat(3, 1fr); gap: 14px; margin-bottom: 14px; flex-shrink: 0; }
@@ -380,17 +377,11 @@
     ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 3px; }
     ::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
 
-    /* Loader */
-    .loader { position: fixed; inset: 0; background: rgba(255, 255, 255, .95); display: flex; align-items: center; justify-content: center; z-index: 9999; transition: opacity .4s; }
-    .loader.hidden { opacity: 0; pointer-events: none; }
-    .loader .spin { width: 40px; height: 40px; border: 3px solid #e2e8f0; border-top-color: var(--accent); border-radius: 50%; animation: sp .65s linear infinite; }
-    @keyframes sp { to { transform: rotate(360deg); } }
-    
     @media (max-width: 900px) {
       .icon-nav { display: none; }
       .fsb { width: 240px; }
-      .split-layout { flex-direction: column; }
-      .split-right { height: 300px; }
+      .step3-layout { flex-direction: column; }
+      .index-mid-nav { width: 100%; flex-direction: row; height: auto; }
     }
   </style>
 </head>
@@ -543,33 +534,31 @@
           <button class="btn bsc" data-back-to="2">← 戻る</button>
         </div>
         
-        <div class="step3-container">
-          <div class="index-v-nav" id="indexBtnBox"></div>
-
-          <div class="split-layout" style="margin-bottom:0;">
-            <div class="split-left">
-              <div class="card" id="wbCard">
-                <div class="ctit" id="wbTit"><span class="dot" style="background:var(--accent);"></span>WBインデックス別スコア比較</div>
-                <div class="cnote" id="wbNote">左側のインデックスアイコンをクリックすると右側に詳細ブレイクダウンが表示されます</div>
-                <div class="cscroll" id="wbScr"><canvas id="wbChart"></canvas></div>
-              </div>
+        <div class="step3-layout">
+          <div class="step3-left">
+            <div class="card" id="wbCard">
+              <div class="ctit" id="wbTit"><span class="dot" style="background:var(--accent);"></span>WBインデックス別スコア比較</div>
+              <div class="cnote" id="wbNote">中央の指標名ボタンをクリックすると、右側に詳細ブレイクダウンが表示されます</div>
+              <div class="cscroll" id="wbScr"><canvas id="wbChart"></canvas></div>
             </div>
-            
-            <div class="split-right">
-              <div class="card" id="map3Container">
-                <div class="ctit">
-                  <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 1C5.7 1 3 3.7 3 7c0 5 6 10 6 10s6-5 6-10c0-3.3-2.7-6-6-6z"/><circle cx="9" cy="7" r="2"/></svg>
-                  エリアマップ
-                </div>
-                <div id="map3"></div>
-              </div>
+          </div>
+          
+          <div class="index-mid-nav" id="indexBtnBox"></div>
 
-              <div class="drilldown-section" id="drilldownSection" style="display:none;">
-                <div id="drillBar"></div>
-                <div class="ctit" id="detailTit"><span class="dot" style="background:var(--red);"></span>詳細指標比較</div>
-                <div class="cnote" id="detailNote">選択したインデックスに紐づく詳細指標の比較です</div>
-                <div class="cscroll" style="flex:1;"><canvas id="detailChart"></canvas></div>
+          <div class="step3-right">
+            <div class="card" id="map3Container">
+              <div class="ctit">
+                <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 1C5.7 1 3 3.7 3 7c0 5 6 10 6 10s6-5 6-10c0-3.3-2.7-6-6-6z"/><circle cx="9" cy="7" r="2"/></svg>
+                エリアマップ
               </div>
+              <div id="map3"></div>
+            </div>
+
+            <div class="drilldown-section" id="drilldownSection" style="display:none;">
+              <div id="drillBar"></div>
+              <div class="ctit" id="detailTit"><span class="dot" style="background:var(--red);"></span>詳細指標比較</div>
+              <div class="cnote" id="detailNote">選択したインデックスに紐づく詳細指標の比較です</div>
+              <div class="cscroll" style="flex:1;"><canvas id="detailChart"></canvas></div>
             </div>
           </div>
         </div>
@@ -678,24 +667,20 @@
 
   // --- EVENT BINDING ENGINE ---
   function bindEvents() {
-    // Nav Actions
     document.querySelectorAll('.icon-nav .ib').forEach(btn => {
       btn.addEventListener('click', () => goStep(Number(btn.dataset.step)));
     });
 
-    // Step Triggers
     document.getElementById('btn2').addEventListener('click', () => goStep(2));
     document.getElementById('btn3').addEventListener('click', () => goStep(3));
     document.querySelectorAll('[data-back-to]').forEach(btn => {
       btn.addEventListener('click', () => goStep(Number(btn.dataset.backTo)));
     });
 
-    // Filters
     ['fR', 'fT', 'fP'].forEach(id => {
       document.getElementById(id).addEventListener('change', applyFilters);
     });
 
-    // Sort Handlers
     document.querySelectorAll('[data-sort-s1]').forEach(th => {
       th.addEventListener('click', () => sortS1(th.dataset.sortS1));
     });
@@ -703,7 +688,6 @@
       th.addEventListener('click', () => sortS2(th.dataset.sortS2));
     });
 
-    // Bulk Select Step 2
     document.getElementById('s2ca').addEventListener('change', (e) => toggleAllS2(e.target));
   }
 
@@ -947,45 +931,43 @@
     const ids = [targetId, ...compIds];
     if (ids.length < 2) { alert('比較エリアを1つ以上選択してください'); goStep(2); return; }
     
+    // どの指標ボタンも選ばれていない（初期状態マップ）を設定
     currentWB = null;
+    document.getElementById('drilldownSection').style.display = 'none';
+    document.getElementById('map3Container').style.display = 'flex'; 
 
     if (wbChart) { wbChart.destroy(); wbChart = null; }
     if (detailChart) { detailChart.destroy(); detailChart = null; }
 
     updateMap3(ids);
     renderWBChart(ids);
-    buildVerticalIndexButtons(ids); // 縦型の極小アイコン風ボタンを生成
+    buildMiddleIndexButtons(ids); // グラフとグラフの間に配置する指標名ボタン群の動生成
   }
 
-  // ミニマムな縦並びアイコン風ボタン生成エンジン
-  function buildVerticalIndexButtons(ids) {
+  // グラフの間に正式名称の指標ボタン群を配置（初期状態はアクティブなし）
+  function buildMiddleIndexButtons(ids) {
     const btnBox = document.getElementById('indexBtnBox');
     btnBox.innerHTML = '';
 
-    wbList.forEach((wb, index) => {
+    wbList.forEach((wb) => {
       const btn = document.createElement('button');
-      btn.className = 'idx-btn-v';
-      
-      // アイコン表記用に「WB01」〜「WB20」の通し番号を生成して配置
-      const serialNum = String(index + 1).padStart(2, '0');
-      btn.textContent = `WB${serialNum}`;
-      
-      // ホバー時にインデックスの正式名称を表示させるツールチップ設定
-      btn.title = wb;
+      btn.className = 'idx-btn-mid';
+      btn.textContent = wb;
+      btn.title = wb; // 長い文字が省略された場合用のツールチップ
       
       btn.addEventListener('click', () => {
-        document.querySelectorAll('.idx-btn-v').forEach(b => b.classList.remove('active'));
+        // 同じボタンがクリックされたらトグルで解除して地図に戻す
+        if (btn.classList.contains('active')) {
+          hideDrilldown();
+          return;
+        }
+
+        document.querySelectorAll('.idx-btn-mid').forEach(b => b.classList.remove('active'));
         btn.classList.add('active');
         drillDown(wb, ids);
       });
 
       btnBox.appendChild(btn);
-
-      // 初期起動時は1番目の指標を自動アクティブ化
-      if (index === 0) {
-        btn.classList.add('active');
-        drillDown(wb, ids);
-      }
     });
   }
 
@@ -1015,8 +997,6 @@
         responsive: true,
         maintainAspectRatio: false,
         devicePixelRatio: window.devicePixelRatio || 2, 
-        
-        // --- ⚡ ホバーもたつき改善のための軽量化処理 ---
         hover: { animationDuration: 0 },
         interaction: { 
           mode: 'nearest', 
@@ -1039,7 +1019,7 @@
     currentWB = wb;
     if (detailChart) detailChart.destroy();
 
-    // 排他制御：右側カラムの地図を非表示、詳細コンテナを表示
+    // 排他制御：右側の地図を非表示、詳細グラフコンテナを表示
     document.getElementById('map3Container').style.display = 'none';
     const section = document.getElementById('drilldownSection');
     section.style.display = 'flex';
@@ -1087,8 +1067,6 @@
         responsive: true,
         maintainAspectRatio: false,
         devicePixelRatio: window.devicePixelRatio || 2, 
-        
-        // --- ⚡ ホバーもたつき改善のための軽量化処理 ---
         hover: { animationDuration: 0 },
         interaction: { 
           mode: 'nearest', 
@@ -1109,10 +1087,10 @@
 
   function hideDrilldown() {
     currentWB = null;
-    // 指標ナビゲーションのアクティブをクリア
-    document.querySelectorAll('.idx-btn-v').forEach(b => b.classList.remove('active'));
+    // ボタンの選択ハイライト状態をすべてリセット
+    document.querySelectorAll('.idx-btn-mid').forEach(b => b.classList.remove('active'));
     
-    // 地図と詳細領域の排他表示を切り替えて復元
+    // 排他をリフレッシュして、右側を既存の地図表示に戻す
     document.getElementById('drilldownSection').style.display = 'none';
     document.getElementById('map3Container').style.display = 'flex';
     if (detailChart) { detailChart.destroy(); detailChart = null; }
@@ -1167,7 +1145,6 @@
     }
   }
 
-  // 他のマップロジック等は一切変更していません
   function updateMap2() {
     clearMarkers(m2M, map2);
     const bounds = [];
