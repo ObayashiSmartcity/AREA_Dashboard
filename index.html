@@ -804,15 +804,26 @@
     applyFilters();
   }
 
-  // --- STEP 2 LOGIC: SIMILARITY ENGINE ---
+  // --- STEP 2 LOGIC: SIMILARITY ENGINE (FIXED) ---
   function cosineSimilarity(vecA, vecB) {
+    const length = Math.min(vecA.length, vecB.length);
+    if (length === 0) return 0;
+
     let dot = 0, normA = 0, normB = 0;
-    for (let i = 0; i < vecA.length; i++) {
-      dot += vecA[i] * vecB[i];
-      normA += vecA[i] * vecB[i];
-      normB += vecB[i] * vecB[i];
+    for (let i = 0; i < length; i++) {
+      const valA = Number(vecA[i]) || 0;
+      const valB = Number(vecB[i]) || 0;
+
+      dot += valA * valB;
+      normA += valA * valA;
+      normB += valB * valB;
     }
-    return (normA === 0 || normB === 0) ? 0 : dot / (Math.sqrt(normA) * Math.sqrt(normB));
+
+    const denominator = Math.sqrt(normA) * Math.sqrt(normB);
+    if (denominator === 0) return 0;
+    
+    // 計算誤差、あるいはゼロ除算による1.0超え（500%等）のバグを完全にガード
+    return Math.min(1, Math.max(-1, dot / denominator));
   }
 
   function buildS2() {
