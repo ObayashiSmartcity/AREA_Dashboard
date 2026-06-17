@@ -442,7 +442,7 @@
       <div style="flex:1"></div>
       <span class="badge bst" id="bStp">STEP 1</span>
       <span class="badge bo" id="bTot">-</span>
-      <span class="badge bgr" id="bSel">0 選択中</span>
+      <span class="badge bgr" id="bSel"><img src="04_obayashi_o.png" alt="Logo" style="height: 14px; vertical-align: middle; margin-right: 4px;">0 選択中</span>
     </header>
     
     <div class="content">
@@ -822,7 +822,6 @@
     const denominator = Math.sqrt(normA) * Math.sqrt(normB);
     if (denominator === 0) return 0;
     
-    // 計算誤差、あるいはゼロ除算による1.0超え（500%等）のバグを完全にガード
     return Math.min(1, Math.max(-1, dot / denominator));
   }
 
@@ -925,7 +924,7 @@
     const totalSelected = compIds.size;
     document.getElementById('s2cn').textContent = totalSelected;
     document.getElementById('btn3').disabled = totalSelected === 0;
-    document.getElementById('bSel').textContent = `${totalSelected} 選択中`;
+    document.getElementById('bSel').innerHTML = `<img src="04_obayashi_o.png" alt="Logo" style="height: 14px; vertical-align: middle; margin-right: 4px;">${totalSelected} 選択中`;
 
     const chipContainer = document.getElementById('s2ch');
     chipContainer.innerHTML = '';
@@ -957,7 +956,6 @@
     const ids = [targetId, ...compIds];
     if (ids.length < 2) { alert('比較エリアを1つ以上選択してください'); goStep(2); return; }
     
-    // どの指標ボタンも選ばれていない（初期状態マップ）を設定
     currentWB = null;
     document.getElementById('drilldownSection').style.display = 'none';
     document.getElementById('map3Container').style.display = 'flex'; 
@@ -967,10 +965,9 @@
 
     updateMap3(ids);
     renderWBChart(ids);
-    buildMiddleIndexButtons(ids); // グラフとグラフの間に配置する指標名ボタン群の動生成
+    buildMiddleIndexButtons(ids); 
   }
 
-  // グラフの間に正式名称の指標ボタン群を配置（初期状態はアクティブなし）
   function buildMiddleIndexButtons(ids) {
     const btnBox = document.getElementById('indexBtnBox');
     btnBox.innerHTML = '';
@@ -979,10 +976,9 @@
       const btn = document.createElement('button');
       btn.className = 'idx-btn-mid';
       btn.textContent = wb;
-      btn.title = wb; // 長い文字が省略された場合用のツールチップ
+      btn.title = wb; 
       
       btn.addEventListener('click', () => {
-        // 同じボタンがクリックされたらトグルで解除して地図に戻す
         if (btn.classList.contains('active')) {
           hideDrilldown();
           return;
@@ -1045,7 +1041,6 @@
     currentWB = wb;
     if (detailChart) detailChart.destroy();
 
-    // 排他制御：右側の地図を非表示、詳細グラフコンテナを表示
     document.getElementById('map3Container').style.display = 'none';
     const section = document.getElementById('drilldownSection');
     section.style.display = 'flex';
@@ -1113,10 +1108,8 @@
 
   function hideDrilldown() {
     currentWB = null;
-    // ボタンの選択ハイライト状態をすべてリセット
     document.querySelectorAll('.idx-btn-mid').forEach(b => b.classList.remove('active'));
     
-    // 排他をリフレッシュして、右側を既存の地図表示に戻す
     document.getElementById('drilldownSection').style.display = 'none';
     document.getElementById('map3Container').style.display = 'flex';
     if (detailChart) { detailChart.destroy(); detailChart = null; }
