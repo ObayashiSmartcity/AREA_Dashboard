@@ -442,7 +442,7 @@
       <div style="flex:1"></div>
       <span class="badge bst" id="bStp">STEP 1</span>
       <span class="badge bo" id="bTot">-</span>
-      <span class="badge bgr" id="bSel"><img src="04_obayashi_o.png" alt="Logo" style="height: 14px; vertical-align: middle; margin-right: 4px;">0 選択中</span>
+      <span class="badge bgr" id="bSel"><img src="04_obayashi_c.png" alt="Logo" style="height: 14px; vertical-align: middle; margin-right: 4px;">0 選択中</span>
     </header>
     
     <div class="content">
@@ -924,7 +924,7 @@
     const totalSelected = compIds.size;
     document.getElementById('s2cn').textContent = totalSelected;
     document.getElementById('btn3').disabled = totalSelected === 0;
-    document.getElementById('bSel').innerHTML = `<img src="04_obayashi_o.png" alt="Logo" style="height: 14px; vertical-align: middle; margin-right: 4px;">${totalSelected} 選択中`;
+    document.getElementById('bSel').innerHTML = `<img src="04_obayashi_c.png" alt="Logo" style="height: 14px; vertical-align: middle; margin-right: 4px;">${totalSelected} 選択中`;
 
     const chipContainer = document.getElementById('s2ch');
     chipContainer.innerHTML = '';
